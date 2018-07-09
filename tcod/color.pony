@@ -1,5 +1,6 @@
 use "assert"
 
+//use "path:/usr/local/lib"
 use "lib:tcod"
 
 // declare c-stuff:
@@ -29,10 +30,17 @@ use @TCOD_color_gen_map[None](map: Pointer[Color] tag, nb_key: USize,
 
 // colour:
 primitive Color
-  new create(red: U8, green: U8, blue: U8) =>
+  """
+Represents a primitive C-struct with a red, a green and a blue component.
+"""
+
+  new create() => """"""
+
+  new from_RGB(red: U8, green: U8, blue: U8) =>
     @TCOD_color_RGB(red, green, blue)
 
   new from_HSV(hue: F32, saturation: F32, value: F32) =>
+    """`saturation` and `value` are clamped between 0 and 1"""
     @TCOD_color_HSV(hue, saturation, value)
 
   fun equals(other: Color): Bool =>
@@ -66,9 +74,14 @@ primitive Color
     end
 
   fun lerp(other: Color, coef: F32): Color =>
+    """Linearly interpolates two colours"""
     @TCOD_color_lerp(this, other, coef)
 
   fun ref set_HSV(hue: F32, saturation: F32, value: F32) =>
+    """
+    Modifies `this` by calculating and setting the RGB-values from the HSV-values.
+    `saturation` and `value` are clamped between 0 and 1
+    """
     var t = this
     @TCOD_color_set_HSV(addressof t, hue, saturation, value)
 
@@ -90,6 +103,7 @@ primitive Color
     @TCOD_color_get_saturation(this)
 
   fun ref set_saturation(saturation: F32) =>
+    """`saturation` is clamped between 0 and 1"""
     var t = this
     @TCOD_color_set_saturation(addressof t, saturation)
 
@@ -97,10 +111,12 @@ primitive Color
     @TCOD_color_get_value(this)
 
   fun ref set_value(value: F32) =>
+    """`value` is clamped between 0 and 1"""
     var t = this
     @TCOD_color_set_value(addressof t, value)
 
   fun ref shift_hue(hshift: F32) =>
+    """Shifts the hue by `hshift` degrees"""
     var t = this
     @TCOD_color_shift_hue(addressof t, hshift)
 
@@ -109,10 +125,13 @@ primitive Color
     @TCOD_color_scale_HSV(addressof t, saturation_coef, value_coef)
 
   fun gen_map (colors: Array[Color], indices: Array[I32]): Array[Color]? =>
+    """
+Generates a gradiant. The `colours` will be interpolated between the `indices`. 
+The last index defines the total size of the result array.
+"""
     let nb_key = colors.size()
-    Assert(nb_key == indices.size(),
-      "Every color needs an associated index!")?
-    var body = Array[Color](256)
+    Assert(nb_key == indices.size(), "'colors' and 'indices' must be of same length!")?
+    let body = Array[Color](indices(nb_key - 1)?.usize() + 1)
     @TCOD_color_gen_map(body.cpointer(), nb_key,
       colors.cpointer(), indices.cpointer())
     body
