@@ -5,7 +5,7 @@ actor Main
                   Color(255, 0, 0)
                   Color(255, 255, 255)]
     try
-      Gradiant.generate(colors, indices)?
+      Colors.gen_map(colors, indices)?
     else
       env.out.print("Failed to generate color_map!")
     end
